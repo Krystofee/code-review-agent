@@ -1,7 +1,8 @@
 #!/Users/krystofrehacek/Repos/code-review/.venv/bin/python3
 
 import os
-import anthropic
+from dotenv import load_dotenv
+import openai
 
 # Generate git diff with master branch and save it to a temporary file
 os.system("git diff -U10 master > temp_diff.txt")
@@ -42,18 +43,17 @@ Try to find parts of the merge request which are left in the codebase but are no
 
 print("Generating code review...")
 
-# Call the Anthropic Opus 3 model for code review
-response = anthropic.Anthropic().messages.create(
-    model="claude-3-opus-20240229",
-    max_tokens=4096,
-    system="You are a professional python and typescript fullstack programmer. Here, you are reviewing a merge request. Output in markdown format.",
+client = openai.OpenAI()
+completion = client.chat.completions.create(
+    model="gpt-4-0125-preview",
     messages=[
+        {"role": "system", "content": "You are a professional python and typescript fullstack programmer. Here, you are reviewing a merge request. Output in markdown format."},
         {"role": "user", "content": prompt}
     ]
 )
 
 # Extract the code review from the response
-code_review = response.content[0].text
+code_review = completion.choices[0].message.content.strip()
 
 # Save the code review to a markdown file
 with open("merge-request-review.md", "w") as file:
